@@ -61,3 +61,39 @@ DELETE http://localhost:8080/api/tracked-ships/2
 
 ### DELETE - bereits gelöscht (404)
 DELETE http://localhost:8080/api/tracked-ships/2
+
+### Suche nach Namen (case-insensitive)
+GET http://localhost:8080/api/tracked-ships/search?name=viking
+
+### Große Schiffe (> 200 m)
+GET http://localhost:8080/api/tracked-ships/large
+
+### ===== Sichtungen =====
+
+### Sichtungen eines Schiffs
+GET http://localhost:8080/api/tracked-ships/2/sightings
+
+### Sichtung anlegen
+POST http://localhost:8080/api/tracked-ships/2/sightings
+Content-Type: application/json
+
+{
+  "observerName": "Robin",
+  "observedAt": "2026-11-10T14:30:00",
+  "location": "Hafen Porvoo",
+  "notes": "Liegt am Ölterminal"
+}
+
+### Zweite Sichtung anlegen
+POST http://localhost:8080/api/tracked-ships/2/sightings
+Content-Type: application/json
+
+{
+  "observerName": "Robin",
+  "observedAt": "2026-11-11T08:15:00",
+  "location": "Finnischer Meerbusen",
+  "notes": "Auslaufend Richtung Westen"
+}
+
+### Schiff löschen -> Sichtungen werden mitgelöscht (in H2 prüfen: SELECT * FROM SIGHTING;)
+DELETE http://localhost:8080/api/tracked-ships/2

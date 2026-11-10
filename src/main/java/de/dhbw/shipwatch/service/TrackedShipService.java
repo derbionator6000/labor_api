@@ -1,64 +1,73 @@
 package de.dhbw.shipwatch.service;
 
 import de.dhbw.shipwatch.model.TrackedShip;
+import de.dhbw.shipwatch.repository.TrackedShipRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TrackedShipService {
 
-    private final ConcurrentHashMap<Long, TrackedShip> store = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
+    // ab dieser Länge (Meter) gilt ein Schiff als "groß"
+    public static final double LARGE_SHIP_LENGTH_M = 200.0;
 
-    public TrackedShipService() {
-        // Beispieldaten für die Entwicklung
-        create(new TrackedShip(null, 230629000L, "Viking Grace", "Passenger", 218.0, false, "Stockholm"));
-        create(new TrackedShip(null, 230983000L, "Sten Ingrid", "Tanker", 144.0, true, "Porvoo"));
-        create(new TrackedShip(null, 230145000L, "Finnmaid", "Ro-Ro Cargo", 219.0, false, "Travemünde"));
+    private final TrackedShipRepository repository;
+
+    public TrackedShipService(TrackedShipRepository repository) {
+        this.repository = repository;
     }
 
     public List<TrackedShip> findAll() {
-        return List.copyOf(store.values());
+        return repository.findAll();
     }
 
     public List<TrackedShip> findByDangerousCargo(boolean dangerousCargo) {
-        return store.values().stream()
-            .filter(ship -> ship.isDangerousCargo() == dangerousCargo)
-            .toList();
+        return repository.findByDangerousCargo(dangerousCargo);
+    }
+
+    public List<TrackedShip> searchByName(String namePart) {
+        return repository.findByNameContainingIgnoreCase(namePart);
+    }
+
+    public List<TrackedShip> findLarge() {
+        return repository.findLongerThan(LARGE_SHIP_LENGTH_M);
     }
 
     public Optional<TrackedShip> findById(Long id) {
-        return Optional.ofNullable(store.get(id));
+        return repository.findById(id);
     }
 
     public TrackedShip create(TrackedShip entity) {
-        Long newId = idGenerator.getAndIncrement();
-        entity.setId(newId);
-        store.put(newId, entity);
-        return entity;
+        return repository.save(entity);
     }
 
-    public Optional<TrackedShip> update(Long id, TrackedShip entity) {
-        if (!store.containsKey(id)) {
-            return Optional.empty();
-        }
-        entity.setId(id);
-        store.put(id, entity);
-        return Optional.of(entity);
-    }
-
-    public Optional<TrackedShip> toggleDangerousCargo(Long id) {
-        return findById(id).map(ship -> {
-            ship.setDangerousCargo(!ship.isDangerousCargo());
-            return ship;
+    public Optional<TrackedShip> update(Long id, TrackedShip updated) {
+        return repository.findById(id).map(existing -> {
+            existing.setMmsi(updated.getMmsi());
+            existing.setName(updated.getName());
+            existing.setShipType(updated.getShipType());
+            existing.setLengthM(updated.getLengthM());
+            existing.setDangerousCargo(updated.isDangerousCargo());
+            existing.setDestination(updated.getDestination());
+            return repository.save(existing);
         });
     }
 
+    public Optional<TrackedShip> toggleDangerousCargo(Long id) {
+        return repository.findById(id).map(ship -> {
+            ship.setDangerousCargo(!ship.isDangerousCargo());
+            return repository.save(ship);
+        });
+    }
+
+    // Sichtungen werden dank cascade = ALL / orphanRemoval mitgelöscht
     public boolean delete(Long id) {
-        return store.remove(id) != null;
+        if (!repository.existsById(id)) {
+            return false;
+        }
+        repository.deleteById(id);
+        return true;
     }
 }

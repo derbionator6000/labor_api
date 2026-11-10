@@ -8,9 +8,8 @@ public final class TrackedShipMapper {
 
     private TrackedShipMapper() {}
 
-    public static TrackedShip toEntity(Long id, TrackedShipRequest request) {
+    public static TrackedShip toEntity(TrackedShipRequest request) {
         return new TrackedShip(
-            id,
             request.mmsi(),
             request.name(),
             request.shipType(),

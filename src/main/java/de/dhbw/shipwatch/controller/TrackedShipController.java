@@ -32,6 +32,22 @@ public class TrackedShipController {
             .toList();
     }
 
+    // GET /api/tracked-ships/search?name=viking
+    @GetMapping("/search")
+    public List<TrackedShipResponse> search(@RequestParam String name) {
+        return service.searchByName(name).stream()
+            .map(TrackedShipMapper::toResponse)
+            .toList();
+    }
+
+    // Schiffe länger als 200 m (Custom Query)
+    @GetMapping("/large")
+    public List<TrackedShipResponse> getLarge() {
+        return service.findLarge().stream()
+            .map(TrackedShipMapper::toResponse)
+            .toList();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TrackedShipResponse> getById(@PathVariable Long id) {
         return service.findById(id)
@@ -42,7 +58,7 @@ public class TrackedShipController {
 
     @PostMapping
     public ResponseEntity<TrackedShipResponse> create(@RequestBody TrackedShipRequest request) {
-        TrackedShip created = service.create(TrackedShipMapper.toEntity(null, request));
+        TrackedShip created = service.create(TrackedShipMapper.toEntity(request));
         return ResponseEntity
             .created(URI.create("/api/tracked-ships/" + created.getId()))
             .body(TrackedShipMapper.toResponse(created));
@@ -51,7 +67,7 @@ public class TrackedShipController {
     @PutMapping("/{id}")
     public ResponseEntity<TrackedShipResponse> update(@PathVariable Long id,
                                                       @RequestBody TrackedShipRequest request) {
-        return service.update(id, TrackedShipMapper.toEntity(id, request))
+        return service.update(id, TrackedShipMapper.toEntity(request))
             .map(TrackedShipMapper::toResponse)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
