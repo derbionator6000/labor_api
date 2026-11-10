@@ -1,0 +1,14 @@
+### Health Check
+GET http://localhost:8080/api/health
+
+### Alle Schiffe (live aus der Digitraffic-API)
+GET http://localhost:8080/api/ships
+
+### Schiff per MMSI
+GET http://localhost:8080/api/ships/538011369
+
+### Anzahl Schiffe
+GET http://localhost:8080/api/ships/count
+
+### API-Info
+GET http://localhost:8080/api/info
