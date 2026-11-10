@@ -12,3 +12,52 @@ GET http://localhost:8080/api/ships/count
 
 ### API-Info
 GET http://localhost:8080/api/info
+
+### ===== Beobachtete Schiffe (CRUD) =====
+
+### GET all
+GET http://localhost:8080/api/tracked-ships
+
+### GET nur Schiffe mit Gefahrgut
+GET http://localhost:8080/api/tracked-ships?dangerousCargo=true
+
+### GET by ID (Erfolg)
+GET http://localhost:8080/api/tracked-ships/1
+
+### GET by ID (404)
+GET http://localhost:8080/api/tracked-ships/9999
+
+### POST - neues Schiff anlegen
+POST http://localhost:8080/api/tracked-ships
+Content-Type: application/json
+
+{
+  "mmsi": 266345000,
+  "name": "Stena Germanica",
+  "shipType": "Passenger",
+  "lengthM": 240.0,
+  "dangerousCargo": false,
+  "destination": "Kiel"
+}
+
+### PUT - Schiff vollständig ersetzen
+PUT http://localhost:8080/api/tracked-ships/1
+Content-Type: application/json
+
+{
+  "mmsi": 230629000,
+  "name": "Viking Grace",
+  "shipType": "Passenger",
+  "lengthM": 218.0,
+  "dangerousCargo": false,
+  "destination": "Turku"
+}
+
+### PATCH - Gefahrgut umschalten
+PATCH http://localhost:8080/api/tracked-ships/1/dangerous-cargo
+
+### DELETE - Schiff entfernen
+DELETE http://localhost:8080/api/tracked-ships/2
+
+### DELETE - bereits gelöscht (404)
+DELETE http://localhost:8080/api/tracked-ships/2
