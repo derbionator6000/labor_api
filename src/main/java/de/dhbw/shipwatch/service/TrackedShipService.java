@@ -1,11 +1,11 @@
 package de.dhbw.shipwatch.service;
 
+import de.dhbw.shipwatch.exception.TrackedShipNotFoundException;
 import de.dhbw.shipwatch.model.TrackedShip;
 import de.dhbw.shipwatch.repository.TrackedShipRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TrackedShipService {
@@ -35,39 +35,37 @@ public class TrackedShipService {
         return repository.findLongerThan(LARGE_SHIP_LENGTH_M);
     }
 
-    public Optional<TrackedShip> findById(Long id) {
-        return repository.findById(id);
+    public TrackedShip getOrThrow(Long id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new TrackedShipNotFoundException(id));
     }
 
     public TrackedShip create(TrackedShip entity) {
         return repository.save(entity);
     }
 
-    public Optional<TrackedShip> update(Long id, TrackedShip updated) {
-        return repository.findById(id).map(existing -> {
-            existing.setMmsi(updated.getMmsi());
-            existing.setName(updated.getName());
-            existing.setShipType(updated.getShipType());
-            existing.setLengthM(updated.getLengthM());
-            existing.setDangerousCargo(updated.isDangerousCargo());
-            existing.setDestination(updated.getDestination());
-            return repository.save(existing);
-        });
+    public TrackedShip update(Long id, TrackedShip updated) {
+        TrackedShip existing = getOrThrow(id);
+        existing.setMmsi(updated.getMmsi());
+        existing.setName(updated.getName());
+        existing.setShipType(updated.getShipType());
+        existing.setLengthM(updated.getLengthM());
+        existing.setDangerousCargo(updated.isDangerousCargo());
+        existing.setDestination(updated.getDestination());
+        return repository.save(existing);
     }
 
-    public Optional<TrackedShip> toggleDangerousCargo(Long id) {
-        return repository.findById(id).map(ship -> {
-            ship.setDangerousCargo(!ship.isDangerousCargo());
-            return repository.save(ship);
-        });
+    public TrackedShip toggleDangerousCargo(Long id) {
+        TrackedShip ship = getOrThrow(id);
+        ship.setDangerousCargo(!ship.isDangerousCargo());
+        return repository.save(ship);
     }
 
     // Sichtungen werden dank cascade = ALL / orphanRemoval mitgelöscht
-    public boolean delete(Long id) {
+    public void delete(Long id) {
         if (!repository.existsById(id)) {
-            return false;
+            throw new TrackedShipNotFoundException(id);
         }
         repository.deleteById(id);
-        return true;
     }
 }

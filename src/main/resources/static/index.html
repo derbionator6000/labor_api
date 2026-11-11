@@ -94,7 +94,12 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 
 async function api(path, options = {}) {
   const res = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...options });
-  if (!res.ok) throw new Error(`${options.method || 'GET'} ${path}: HTTP ${res.status}`);
+  if (!res.ok) {
+    // Fehler kommen als ProblemDetail (RFC 7807), inkl. fieldErrors bei Validierung
+    const problem = await res.json().catch(() => ({}));
+    const fields = Object.entries(problem.fieldErrors || {}).map(([f, m]) => `${f}: ${m}`).join(', ');
+    throw new Error(`${problem.title || 'HTTP ' + res.status}: ${fields || problem.detail || ''}`);
+  }
   return res.status === 204 ? null : res.json();
 }
 

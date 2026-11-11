@@ -97,3 +97,53 @@ Content-Type: application/json
 
 ### Schiff löschen -> Sichtungen werden mitgelöscht (in H2 prüfen: SELECT * FROM SIGHTING;)
 DELETE http://localhost:8080/api/tracked-ships/2
+
+### ===== Validierung & Fehler (ProblemDetail) =====
+
+### POST - Validierungsfehler (Name leer, MMSI 0, Länge negativ)
+POST http://localhost:8080/api/tracked-ships
+Content-Type: application/json
+
+{
+  "mmsi": 0,
+  "name": "",
+  "shipType": "Tanker",
+  "lengthM": -5,
+  "dangerousCargo": false,
+  "destination": "Kiel"
+}
+
+### PUT - Validierungsfehler
+PUT http://localhost:8080/api/tracked-ships/1
+Content-Type: application/json
+
+{
+  "mmsi": 230629000,
+  "name": "   ",
+  "lengthM": 218.0
+}
+
+### GET - 404 mit ProblemDetail
+GET http://localhost:8080/api/tracked-ships/9999
+
+### DELETE - 404 mit ProblemDetail
+DELETE http://localhost:8080/api/tracked-ships/9999
+
+### Sichtung - Validierungsfehler (Beobachter leer, Datum in der Zukunft)
+POST http://localhost:8080/api/tracked-ships/1/sightings
+Content-Type: application/json
+
+{
+  "observerName": "",
+  "observedAt": "2099-01-01T12:00:00"
+}
+
+### Sichtung per ID - 404 mit ProblemDetail
+GET http://localhost:8080/api/tracked-ships/1/sightings/9999
+
+### Kaputtes JSON -> 400
+POST http://localhost:8080/api/tracked-ships
+Content-Type: application/json
+
+{ "name": "Kaputt",
+

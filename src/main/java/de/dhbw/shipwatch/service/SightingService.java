@@ -1,12 +1,14 @@
 package de.dhbw.shipwatch.service;
 
+import de.dhbw.shipwatch.exception.SightingNotFoundException;
+import de.dhbw.shipwatch.exception.TrackedShipNotFoundException;
 import de.dhbw.shipwatch.model.Sighting;
+import de.dhbw.shipwatch.model.TrackedShip;
 import de.dhbw.shipwatch.repository.SightingRepository;
 import de.dhbw.shipwatch.repository.TrackedShipRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SightingService {
@@ -20,18 +22,25 @@ public class SightingService {
         this.sightingRepository = sightingRepository;
     }
 
-    // leer, wenn es das Schiff nicht gibt
-    public Optional<List<Sighting>> findByShip(Long shipId) {
+    public List<Sighting> findByShip(Long shipId) {
         if (!trackedShipRepository.existsById(shipId)) {
-            return Optional.empty();
+            throw new TrackedShipNotFoundException(shipId);
         }
-        return Optional.of(sightingRepository.findByTrackedShipIdOrderByObservedAtDesc(shipId));
+        return sightingRepository.findByTrackedShipIdOrderByObservedAtDesc(shipId);
     }
 
-    public Optional<Sighting> create(Long shipId, Sighting sighting) {
-        return trackedShipRepository.findById(shipId).map(ship -> {
-            ship.addSighting(sighting);
-            return sightingRepository.save(sighting);
-        });
+    public Sighting getOrThrow(Long shipId, Long sightingId) {
+        if (!trackedShipRepository.existsById(shipId)) {
+            throw new TrackedShipNotFoundException(shipId);
+        }
+        return sightingRepository.findByIdAndTrackedShipId(sightingId, shipId)
+            .orElseThrow(() -> new SightingNotFoundException(sightingId));
+    }
+
+    public Sighting create(Long shipId, Sighting sighting) {
+        TrackedShip ship = trackedShipRepository.findById(shipId)
+            .orElseThrow(() -> new TrackedShipNotFoundException(shipId));
+        ship.addSighting(sighting);
+        return sightingRepository.save(sighting);
     }
 }
