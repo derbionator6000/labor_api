@@ -5,6 +5,10 @@ import de.dhbw.shipwatch.dto.TrackedShipResponse;
 import de.dhbw.shipwatch.mapper.TrackedShipMapper;
 import de.dhbw.shipwatch.model.TrackedShip;
 import de.dhbw.shipwatch.service.TrackedShipService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,15 +53,15 @@ public class TrackedShipController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TrackedShipResponse> getById(@PathVariable Long id) {
-        return service.findById(id)
-            .map(TrackedShipMapper::toResponse)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public TrackedShipResponse getById(@PathVariable Long id) {
+        return TrackedShipMapper.toResponse(service.getOrThrow(id));
     }
 
+    @Operation(summary = "Create a new tracked ship")
+    @ApiResponse(responseCode = "201", description = "Created")
+    @ApiResponse(responseCode = "400", description = "Validation failed")
     @PostMapping
-    public ResponseEntity<TrackedShipResponse> create(@RequestBody TrackedShipRequest request) {
+    public ResponseEntity<TrackedShipResponse> create(@Valid @RequestBody TrackedShipRequest request) {
         TrackedShip created = service.create(TrackedShipMapper.toEntity(request));
         return ResponseEntity
             .created(URI.create("/api/tracked-ships/" + created.getId()))
@@ -65,28 +69,20 @@ public class TrackedShipController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TrackedShipResponse> update(@PathVariable Long id,
-                                                      @RequestBody TrackedShipRequest request) {
-        return service.update(id, TrackedShipMapper.toEntity(request))
-            .map(TrackedShipMapper::toResponse)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public TrackedShipResponse update(@PathVariable Long id,
+                                      @Valid @RequestBody TrackedShipRequest request) {
+        return TrackedShipMapper.toResponse(service.update(id, TrackedShipMapper.toEntity(request)));
     }
 
     // schaltet nur das Feld dangerousCargo um
     @PatchMapping("/{id}/dangerous-cargo")
-    public ResponseEntity<TrackedShipResponse> toggleDangerousCargo(@PathVariable Long id) {
-        return service.toggleDangerousCargo(id)
-            .map(TrackedShipMapper::toResponse)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public TrackedShipResponse toggleDangerousCargo(@PathVariable Long id) {
+        return TrackedShipMapper.toResponse(service.toggleDangerousCargo(id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 }

@@ -3,7 +3,9 @@ package de.dhbw.shipwatch.controller;
 import de.dhbw.shipwatch.dto.SightingRequest;
 import de.dhbw.shipwatch.dto.SightingResponse;
 import de.dhbw.shipwatch.mapper.SightingMapper;
+import de.dhbw.shipwatch.model.Sighting;
 import de.dhbw.shipwatch.service.SightingService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,20 +23,23 @@ public class SightingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SightingResponse>> getAll(@PathVariable Long shipId) {
-        return service.findByShip(shipId)
-            .map(list -> list.stream().map(SightingMapper::toResponse).toList())
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public List<SightingResponse> getAll(@PathVariable Long shipId) {
+        return service.findByShip(shipId).stream()
+            .map(SightingMapper::toResponse)
+            .toList();
+    }
+
+    @GetMapping("/{id}")
+    public SightingResponse getById(@PathVariable Long shipId, @PathVariable Long id) {
+        return SightingMapper.toResponse(service.getOrThrow(shipId, id));
     }
 
     @PostMapping
     public ResponseEntity<SightingResponse> create(@PathVariable Long shipId,
-                                                   @RequestBody SightingRequest request) {
-        return service.create(shipId, SightingMapper.toEntity(request))
-            .map(saved -> ResponseEntity
-                .created(URI.create("/api/tracked-ships/" + shipId + "/sightings/" + saved.getId()))
-                .body(SightingMapper.toResponse(saved)))
-            .orElse(ResponseEntity.notFound().build());
+                                                   @Valid @RequestBody SightingRequest request) {
+        Sighting saved = service.create(shipId, SightingMapper.toEntity(request));
+        return ResponseEntity
+            .created(URI.create("/api/tracked-ships/" + shipId + "/sightings/" + saved.getId()))
+            .body(SightingMapper.toResponse(saved));
     }
 }
