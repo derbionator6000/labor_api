@@ -147,3 +147,16 @@ Content-Type: application/json
 
 { "name": "Kaputt",
 
+### ===== Externe API (Digitraffic) =====
+
+### Live-Schiffe nach Namen filtern
+GET http://localhost:8080/api/ships?name=viking
+
+### Zweiter Aufruf kommt aus dem Cache (siehe Log)
+GET http://localhost:8080/api/ships/count
+
+### Live-Schiff in die Beobachtungsliste übernehmen
+POST http://localhost:8080/api/ships/230629000/track
+
+### Prüfen, ob es angekommen ist
+GET http://localhost:8080/api/tracked-ships

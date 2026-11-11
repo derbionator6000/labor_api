@@ -1,12 +1,15 @@
-package de.dhbw.shipwatch.model;
+package de.dhbw.shipwatch.dto.digitraffic;
 
-// Stammdaten eines Schiffs aus der Digitraffic AIS-API
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+// Stammdaten eines Schiffs aus der Digitraffic-AIS-API (externe Struktur, keine Entity)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Ship(
     long mmsi,          // eindeutige Funkkennung
     String name,
     String callSign,
     long imo,
-    int shipType,
+    int shipType,       // AIS-Typcode, z. B. 60-69 Passagier, 80-89 Tanker
     String destination
 ) {
     public Ship {
