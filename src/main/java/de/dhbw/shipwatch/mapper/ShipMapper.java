@@ -13,7 +13,7 @@ public final class ShipMapper {
             source.mmsi(),
             source.name(),
             "AIS " + source.shipType(),
-            0.0,     // Länge liefert die API nicht -> unbekannt
+            source.lengthM(),
             false,
             source.destination()
         );
